@@ -2,15 +2,25 @@
 import './style.css';
 
 import {
+  AreaSeries,
   CandlestickSeries,
   ColorType,
   CrosshairMode,
   HistogramSeries,
+  SeriesMarker,
+  Time,
   createChart,
+  createSeriesMarkers,
 
 } from 'lightweight-charts';
 
 import dump from '../../data.json';
+
+
+const primaryColor = 'rgba(249, 213, 83, 1)';
+
+const incidentTime1 = 1739416500;
+const incidentTime2 = 1739418660;
 
 
 (() => {
@@ -64,7 +74,7 @@ import dump from '../../data.json';
     },
     rightPriceScale: {
       textColor: 'white',
-      borderColor: 'rgba(249, 213, 83, 1)',
+      borderColor: primaryColor,
     },
     grid: {
       vertLines: { color: '#111' },
@@ -111,6 +121,7 @@ import dump from '../../data.json';
       precision: 3,
       minMove: 0.001,
     },
+    priceLineVisible: false,
   });
 
   candlestickSeries.priceScale().applyOptions({
@@ -123,6 +134,30 @@ import dump from '../../data.json';
   candlestickSeries.setData(candlesData);
 
 
+  //=========//
+  // MARKERS //
+  //=========//
+
+  const markers: SeriesMarker<Time>[] = [
+    {
+      time: incidentTime1 as any,
+      position: 'aboveBar',
+      color: primaryColor,
+      shape: 'arrowDown',
+      text: 'OPEN',
+    },
+    {
+      time: incidentTime2 as any,
+      position: 'aboveBar',
+      color: primaryColor,
+      shape: 'arrowDown',
+      text: 'LIQUIDATION',
+    },
+  ];
+
+  createSeriesMarkers(candlestickSeries, markers);
+
+
   //========//
   // VOLUME //
   //========//
@@ -132,7 +167,7 @@ import dump from '../../data.json';
       type: 'volume',
     },
     priceScaleId: '',
-    color: 'rgba(249, 213, 83, 1)',
+    color: primaryColor,
   });
 
   volumeSeries.priceScale().applyOptions({
@@ -178,7 +213,7 @@ import dump from '../../data.json';
       const time = new Date(parseInt(String(param.time), 10) * 1000);
       const volume = data2.value.toLocaleString('en-US');
       toolTip.innerHTML = (`
-        <div>Time: ${formatDate(time)}</div>
+        <div>Time: ${formatDateUtc(time)}</div>
         <div>Open: ${data.open}</div>
         <div>High: ${data.high}</div>
         <div>Low: ${data.low}</div>
@@ -203,17 +238,34 @@ import dump from '../../data.json';
   });
 
 
+  //===========//
+  // HIGHLIGHT //
+  //===========//
+
+  const radius = (5 * 60); // 5 minutes
+
+  const highlightSeries = chart.addSeries(AreaSeries, {
+    priceScaleId: 'unused',
+    topColor: 'rgba(255, 0, 0, 0.2)',
+    bottomColor: 'rgba(255, 0, 0, 0.2)',
+    lineColor: 'transparent',
+    lineWidth: 1,
+    autoscaleInfoProvider: () => null,
+  });
+
+  highlightSeries.setData([
+    { time: incidentTime1 - radius as any, value: 1 },
+    { time: incidentTime2 + radius as any as any, value: 1 },
+  ]);
+
 })();
 
+function formatDateUtc(date: Date): string {
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // +1 because months are 0-based
+  const year = String(date.getUTCFullYear()).slice(-2); // Last 2 digits of year
 
-function formatDate(date: Date): string {
-
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // +1 because months are 0-based
-  const year = String(date.getFullYear()).slice(-2); // Last 2 digits of year
-
-  return `${hours}:${minutes} ${day}.${month}.${year}`;
-
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
