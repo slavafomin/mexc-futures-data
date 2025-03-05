@@ -4,5 +4,11 @@
   "keywords": [],
   "author": "Slava Fomin II <slava@fomin.io>",
   "license": "UNLICENSED",
-  "packageManager": "pnpm@10.4.1"
+  "packageManager": "pnpm@10.4.1",
+  "scripts": {
+    "publish": "cd visualization && pnpm build && cd .. && gh-pages -d visualization/dist"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
 }

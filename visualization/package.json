@@ -1,0 +1,17 @@
+{
+  "name": "visualization",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy": "pnpm build && gh-pages -d dist"
+  },
+  "devDependencies": {
+    "lightweight-charts": "^5.0.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0"
+  }
+}
