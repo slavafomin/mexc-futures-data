@@ -22,6 +22,9 @@ const primaryColor = 'rgba(249, 213, 83, 1)';
 const incidentTime1 = 1739416500;
 const incidentTime2 = 1739418660;
 
+const MINUTE_S = 60;
+const HOUR_S = MINUTE_S * 60;
+
 
 (() => {
 
@@ -93,10 +96,10 @@ const incidentTime2 = 1739418660;
         width: 1,
       },
     },
-  });
-
-  chart.timeScale().applyOptions({
-    borderColor: '#F9D553',
+    timeScale: {
+      borderColor: '#F9D553',
+      timeVisible: true,
+    },
   });
 
   chart.timeScale().fitContent();
@@ -242,7 +245,7 @@ const incidentTime2 = 1739418660;
   // HIGHLIGHT //
   //===========//
 
-  const radius = (5 * 60); // 5 minutes
+  const radius = (5 * MINUTE_S);
 
   const highlightSeries = chart.addSeries(AreaSeries, {
     priceScaleId: 'unused',
@@ -257,6 +260,16 @@ const incidentTime2 = 1739418660;
     { time: incidentTime1 - radius as any, value: 1 },
     { time: incidentTime2 + radius as any as any, value: 1 },
   ]);
+
+
+  //======//
+  // ZOOM //
+  //======//
+
+  chart.timeScale().setVisibleRange({
+    from: (incidentTime1 - HOUR_S) as any,
+    to: (incidentTime2 + HOUR_S) as any,
+  });
 
 })();
 
