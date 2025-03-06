@@ -33,6 +33,7 @@ const HOUR_S = MINUTE_S * 60;
   //==================//
 
   const candlesData: any = [];
+  const candlesRealData: any = [];
   const volumeData: any = [];
 
   const dataPointsCount = dump.data.open.length;
@@ -47,6 +48,14 @@ const HOUR_S = MINUTE_S * 60;
       time: dump.data.time[i],
     });
 
+    candlesRealData.push({
+      open: dump.data.realOpen[i],
+      high: dump.data.realHigh[i],
+      low: dump.data.realLow[i],
+      close: dump.data.realClose[i],
+      time: dump.data.time[i],
+    });
+
     volumeData.push({
       value: dump.data.vol[i],
       time: dump.data.time[i],
@@ -54,20 +63,64 @@ const HOUR_S = MINUTE_S * 60;
 
   }
 
-  const rootElement = (
-    document.querySelector<HTMLDivElement>('#chart')
+
+  //=========//
+  // CHART 1 //
+  //=========//
+
+  let element = (
+    document.querySelector<HTMLDivElement>('#chart-1')
   );
 
-  if (!rootElement) {
-    return;
+  if (element) {
+    initChart({
+      container: element,
+      candlesData: candlesRealData,
+      volumeData,
+      legend: 'THE/USDT ("REAL")',
+    });
   }
 
+
+  //=========//
+  // CHART 2 //
+  //=========//
+
+  element = (
+    document.querySelector<HTMLDivElement>('#chart-2')
+  );
+
+  if (element) {
+    initChart({
+      container: element,
+      candlesData,
+      volumeData,
+      legend: 'THE/USDT',
+    });
+  }
+
+})();
+
+
+function initChart(args: {
+  container: HTMLElement;
+  candlesData: any[];
+  volumeData: any[];
+  legend: string;
+
+}): void {
+
+  const { container } = args;
+
+  container.innerHTML = `
+    <div class="legend">${args.legend}</div>
+  `;
 
   //=======//
   // CHART //
   //=======//
 
-  const chart = createChart(rootElement, {
+  const chart = createChart(container, {
     layout: {
       textColor: 'white',
       background: {
@@ -130,11 +183,12 @@ const HOUR_S = MINUTE_S * 60;
   candlestickSeries.priceScale().applyOptions({
     scaleMargins: {
       top: 0.1,
-      bottom: 0.4,
+      bottom: 0.6,
+      // bottom: 0.4,
     },
   });
 
-  candlestickSeries.setData(candlesData);
+  candlestickSeries.setData(args.candlesData);
 
 
   //=========//
@@ -180,33 +234,45 @@ const HOUR_S = MINUTE_S * 60;
     },
   });
 
-  volumeSeries.setData(volumeData);
+  volumeSeries.setData(args.volumeData);
 
 
   //=========//
   // TOOLTIP //
   //=========//
 
-  const container = document.body;
-
   const toolTipWidth = 140;
   const toolTipHeight = 98;
-  const toolTipMargin = 15;
+  const offset = 15;
+
+  const body = document.body;
 
   const toolTip = document.createElement('div');
   toolTip.className = 'tooltip';
   toolTip.style.width = `${toolTipWidth}px`;
   toolTip.style.height = `${toolTipHeight}px`;
-  document.body.appendChild(toolTip);
+  body.appendChild(toolTip);
 
   chart.subscribeCrosshairMove(param => {
+
+    const {
+      clientX = 0,
+      clientY = 0,
+
+    } = param.sourceEvent ?? {};
+
+    const rect = container.getBoundingClientRect();
+
+    const minX = rect.left;
+    const maxX = rect.right;
+
+    const minY = rect.top;
+    const maxY = rect.bottom;
+
     if (
-      param.point === undefined ||
       !param.time ||
-      param.point.x < 0 ||
-      param.point.x > container.clientWidth ||
-      param.point.y < 0 ||
-      param.point.y > container.clientHeight
+      (clientX < minX || clientX > maxX) ||
+      (clientY < minY || clientY > maxY)
     ) {
       toolTip.style.display = 'none';
     } else {
@@ -224,15 +290,14 @@ const HOUR_S = MINUTE_S * 60;
         <div>Volume: ${volume}</div>
       `);
 
-      const y = param.point.y;
-      let left = param.point.x + toolTipMargin;
-      if (left > container.clientWidth - toolTipWidth) {
-        left = param.point.x - toolTipMargin - toolTipWidth;
+      let left = (clientX + offset);
+      if (left > rect.width - toolTipWidth) {
+        left = clientX - offset - toolTipWidth;
       }
 
-      let top = y + toolTipMargin;
-      if (top > container.clientHeight - toolTipHeight) {
-        top = y - toolTipHeight - toolTipMargin;
+      let top = (clientY + offset);
+      if (top > rect.top + rect.height - toolTipHeight) {
+        top = clientY - toolTipHeight - offset;
       }
 
       toolTip.style.left = left + 'px';
@@ -271,7 +336,9 @@ const HOUR_S = MINUTE_S * 60;
     to: (incidentTime2 + HOUR_S) as any,
   });
 
-})();
+
+
+}
 
 function formatDateUtc(date: Date): string {
   const hours = String(date.getUTCHours()).padStart(2, '0');

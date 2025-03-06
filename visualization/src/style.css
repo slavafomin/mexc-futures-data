@@ -10,6 +10,8 @@
 body {
   margin: 0;
   overflow: hidden;
+  width: 100vw;
+  height: 100vh;
 }
 
 #title {
@@ -40,9 +42,39 @@ body {
   text-decoration-color: rgba(249, 213, 83, 1);
 }
 
-#chart {
+#chart-1, #chart-2 {
+  position: absolute;
+  left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 50vh;
+}
+
+#chart-1 {
+  top: 0;
+}
+
+#chart-2 {
+  bottom: 0;
+}
+
+.legend {
+
+  position: absolute;
+  right: 80px;
+  top: 10px;
+
+  padding: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: left;
+  z-index: 1000;
+  pointer-events: none;
+  border: 1px solid rgba(249, 213, 83, 1);
+  border-radius: 2px;
+  background: black;
+  color: white;
+
 }
 
 .tooltip {
